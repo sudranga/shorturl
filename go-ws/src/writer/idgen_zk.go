@@ -6,6 +6,8 @@ import (
     "time"
     "fmt"
     "strconv"
+    "os"
+    "strings"
 )
 
 type zkInst struct {
@@ -24,7 +26,16 @@ func (z *zkInst) init() {
     z.currId = 0
     z.maxId = 0
     var servers []string
-    servers = append(servers, "zookeeper")
+    zkSvc := os.Getenv("ZK_CS_SERVICE_HOST")
+    for _, e := range os.Environ() {
+        pair := strings.Split(e, "=")
+        fmt.Println(pair[0])
+    }
+
+    if zkSvc == "" {
+        zkSvc = "zookeeper"
+    }
+    servers = append(servers, zkSvc)
     conn, _, err := zk.Connect(servers, time.Second)
     if err != nil {
         panic(err)

@@ -5,7 +5,7 @@ import "os"
 type DB interface {
     InitDB(conn map[string]string)
     AddToDB(key string, val string) 
-    ReadFromDB(id string) string
+    ReadFromDB(id string) (string, error)
 }
 
 func CreateDB() DB {

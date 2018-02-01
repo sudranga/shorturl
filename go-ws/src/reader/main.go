@@ -4,11 +4,13 @@ import (
     "fmt"
     "io/ioutil"
     "net/http"
+    "db"
     "html/template"
+    "net/url"
 )
 
 type ServerCTX struct {
-    db    DB
+    dbInst    db.DB
 }
 
 type readOk struct {
@@ -18,18 +20,43 @@ type readOk struct {
 
 func readHandler(ctx ServerCTX) http.Handler {
     fn := func(w http.ResponseWriter, r *http.Request) {
-    	r.ParseForm()
-	id := r.Form.Get("id")
-	fmt.Println("Id is " + id)
-        u := ctx.db.readFromDB(id)
-        t, _ := template.ParseFiles("readok.html")
-        resp := readOk{Url: u, Id: id}
-        t.Execute(w, resp)
+        urlString := r.URL.Path
+        parsedUrl, err := url.Parse(urlString)
+        if err != nil {
+            http.Error(w, "Unable to read request", 400)
+            return
+        }
+	    id := parsedUrl.Path[1:len(parsedUrl.Path)]
+	    fmt.Println("Id is " + id)
+        u, err := ctx.dbInst.ReadFromDB(id)
+        if err != nil {
+            http.NotFound(w, r)
+            return
+        } else {
+            http.Redirect(w, r, u, 303)
+        }
     }
     return http.HandlerFunc(fn)
 }
 
-func helloHandler(ctx ServerCTX) http.Handler {
+func debugReadHandler(ctx ServerCTX) http.Handler {
+    fn := func(w http.ResponseWriter, r *http.Request) {
+    	r.ParseForm()
+	    id := r.Form.Get("id")
+	    fmt.Println("Id is " + id)
+        u, err := ctx.dbInst.ReadFromDB(id)
+        if err != nil {
+            http.NotFound(w, r)
+        } else {
+            t, _ := template.ParseFiles("readok.html")
+            resp := readOk{Url: u, Id: id}
+            t.Execute(w, resp)
+        }
+    }
+    return http.HandlerFunc(fn)
+}
+
+func debugMainHandler(ctx ServerCTX) http.Handler {
     fn := func(w http.ResponseWriter, r *http.Request) {
         data, _ := ioutil.ReadFile("./main.html")
         w.Write(data)
@@ -39,12 +66,13 @@ func helloHandler(ctx ServerCTX) http.Handler {
 
 func main() {
 
-    d := CreateDB()
-    serverCTX :=  ServerCTX{db:d}
+    d := db.CreateDB()
+    serverCTX :=  ServerCTX{dbInst:d}
     
     mux := http.NewServeMux()
-    mux.Handle("/", helloHandler(serverCTX))
-    mux.Handle("/read", readHandler(serverCTX))
+    mux.Handle("/main", debugMainHandler(serverCTX))
+    mux.Handle("/read", debugReadHandler(serverCTX))
+    mux.Handle("/", readHandler(serverCTX))
     http.ListenAndServe(":8080", mux)
 
 }

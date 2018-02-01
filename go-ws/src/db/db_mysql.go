@@ -25,7 +25,7 @@ func (d *mySQLDB) InitDB(params map[string]string) {
     d.db = db
 }
 
-func (d *mySQLDB) ReadFromDB(id string) string {
+func (d *mySQLDB) ReadFromDB(id string) (string, error) {
     stmt, err := d.db.Prepare("SELECT * FROM testtab WHERE id= ?")
     if err != nil {
         panic(err.Error())
@@ -35,11 +35,7 @@ func (d *mySQLDB) ReadFromDB(id string) string {
     var url string
 
     err = stmt.QueryRow(id).Scan(&tmp1, &tmp2, &url)
-    if err != nil {
-        panic(err.Error())
-    }
-    
-    return url
+    return url, err
 }
 
 func (d *mySQLDB) AddToDB(key string, val string) {
