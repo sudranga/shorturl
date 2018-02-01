@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Pod
+metadata:
+    name: writer
+    labels:
+        kind: writer
+spec:
+    containers:
+        - name: writer
+          image: writer
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: writer
+spec:
+    type: NodePort
+    ports:
+        - port: 8000
+          nodePort: 30800
+    selector:
+        kind: writer              

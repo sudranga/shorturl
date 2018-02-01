@@ -1,4 +1,4 @@
-package main
+package db
 
 import (
 	"database/sql"
@@ -10,8 +10,9 @@ type mySQLDB struct {
     db    *sql.DB
 }
 
-func (d *mySQLDB) initDB() {
-    db, err := sql.Open("mysql", "root:root@tcp(mysql)/test")
+func (d *mySQLDB) InitDB(params map[string]string) {
+    
+    db, err := sql.Open("mysql", params["Username"]+":" + params["Password"] + "@tcp(" + params["Host"] + ")/"+params["Db"])
     if err != nil {
         panic(err.Error()) // Just for example purpose. You should use proper error handling instead of panic
     }
@@ -24,7 +25,7 @@ func (d *mySQLDB) initDB() {
     d.db = db
 }
 
-func (d *mySQLDB) readFromDB(id string) string {
+func (d *mySQLDB) ReadFromDB(id string) string {
     stmt, err := d.db.Prepare("SELECT * FROM testtab WHERE id= ?")
     if err != nil {
         panic(err.Error())
@@ -41,7 +42,7 @@ func (d *mySQLDB) readFromDB(id string) string {
     return url
 }
 
-func (d *mySQLDB) addToDB(key string, val string) {
+func (d *mySQLDB) AddToDB(key string, val string) {
     stmt, err := d.db.Prepare("INSERT INTO testtab (url, id) VALUES(?,?)") // ? = placeholder
     if err != nil {
         panic(err.Error()) // proper error handling instead of panic in your app
