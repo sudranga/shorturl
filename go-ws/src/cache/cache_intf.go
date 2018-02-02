@@ -1,11 +1,11 @@
-package main
+package cache
 
 import "os"
 
 type Cache interface {
-    init(connString string) 
-    addKV(url string, sf string)
-    getValue(v string) string
+    Init(connString string) 
+    AddKV(url string, sf string)
+    GetValue(v string) string
 }
 
 func CreateCache() Cache{
@@ -21,6 +21,6 @@ func CreateCache() Cache{
     redisSvc := redisSvcHost + ":" + string(redisSvcPort)
 
     v := &redisCache{}
-    v.init(redisSvc)
+    v.Init(redisSvc)
     return v
 }

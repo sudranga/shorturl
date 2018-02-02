@@ -1,4 +1,4 @@
-package main
+package cache
 
 import (
     "github.com/go-redis/redis"
@@ -9,12 +9,12 @@ type redisCache struct {
     client *redis.Client
 }
 
-func (c *redisCache) addKV(url string, shortForm string) {
+func (c *redisCache) AddKV(url string, shortForm string) {
     fmt.Println("R: Add url: "+url+" and shortform: "+shortForm)
     c.client.Set(url, shortForm, 0)
 }
 
-func (c *redisCache) getValue(url string) string {
+func (c *redisCache) GetValue(url string) string {
     fmt.Println("R: Find Url: "+url)
     val, err := c.client.Get(url).Result()
     fmt.Println("R: Found value:  "+val)
@@ -26,7 +26,7 @@ func (c *redisCache) getValue(url string) string {
     }
 }
 
-func (c *redisCache) init(redisSvc string) {
+func (c *redisCache) Init(redisSvc string) {
     client := redis.NewClient(&redis.Options{
         Addr:     redisSvc,
         Password: "", // no password set
