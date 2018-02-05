@@ -7,10 +7,12 @@ import (
     "db"
     "html/template"
     "net/url"
+    "cache"
 )
 
 type ServerCTX struct {
-    dbInst    db.DB
+    dbInst      db.DB
+    cacheInst   cache.Cache
 }
 
 type readOk struct {
@@ -28,7 +30,14 @@ func readHandler(ctx ServerCTX) http.Handler {
         }
 	    id := parsedUrl.Path[1:len(parsedUrl.Path)]
 	    fmt.Println("Id is " + id)
-        u, err := ctx.dbInst.ReadFromDB(id)
+        
+        u := ctx.cacheInst.GetValue(id)
+        fmt.Println("Cached val is " + u)
+        
+        if u == "" {
+            u, err = ctx.dbInst.ReadFromDB(id)
+        }
+
         if err != nil {
             http.NotFound(w, r)
             return
@@ -67,7 +76,8 @@ func debugMainHandler(ctx ServerCTX) http.Handler {
 func main() {
 
     d := db.CreateDB()
-    serverCTX :=  ServerCTX{dbInst:d}
+    c := cache.CreateCache()
+    serverCTX :=  ServerCTX{dbInst: d, cacheInst: c}
     
     mux := http.NewServeMux()
     mux.Handle("/main", debugMainHandler(serverCTX))

@@ -6,12 +6,13 @@ import (
     "net/http"
     "html/template"
     "db"
+    "cache"
 )
 
 type ServerCTX struct {
-    idgen     IdGenerator
-    cache     Cache     
-    dbInst    db.DB
+    idgen           IdGenerator
+    cacheInst       cache.Cache     
+    dbInst          db.DB
 }
 
 type writeOk struct {
@@ -24,14 +25,15 @@ func writeHandler(ctx ServerCTX) http.Handler {
     	r.ParseForm()
 	    u := r.Form.Get("url")
         fmt.Println("Url is " + u)
-        v := ctx.cache.getValue(u)
+        v := ctx.cacheInst.GetValue(u)
         fmt.Println("value " + v)
 	    if v == "" {
             fmt.Println("Trying to get id " + v)
             v = ctx.idgen.getId()
             fmt.Println("Got value " + v)
             ctx.dbInst.AddToDB(u, v)
-    	    ctx.cache.addKV(u, v)
+    	    ctx.cacheInst.AddKV(u, v)
+    	    ctx.cacheInst.AddKV(v, u)
         }
         t, _ := template.ParseFiles("writeok.html")
         resp := writeOk{Url: u, Id: v}
@@ -51,9 +53,9 @@ func mainHandler(ctx ServerCTX) http.Handler {
 func main() {
 
     g := GetIdGenerator()
-    c := CreateCache()
+    c := cache.CreateCache()
     d := db.CreateDB()
-    serverCTX :=  ServerCTX{idgen : g, cache: c, dbInst:d}
+    serverCTX :=  ServerCTX{idgen : g, cacheInst: c, dbInst:d}
     
     mux := http.NewServeMux()
     mux.Handle("/", mainHandler(serverCTX))

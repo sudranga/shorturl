@@ -1,0 +1,250 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: test-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/server-snippet: |
+            client_max_body_size 10G;
+            location = / {
+            set $proxy_upstream_name "default-writer-8000";
+            set $namespace      "default";
+            set $ingress_name   "test-ingress";
+            set $service_name   "writer";
+            port_in_redirect off;
+            client_max_body_size                    "1m";
+            proxy_set_header Host                   $best_http_host;
+            # Pass the extracted client certificate to the backend
+            proxy_set_header ssl-client-cert        "";
+            proxy_set_header ssl-client-verify      "";
+            proxy_set_header ssl-client-dn          "";
+            # Allow websocket connections
+            proxy_set_header                        Upgrade           $http_upgrade;
+            proxy_set_header                        Connection        $connection_upgrade;
+            proxy_set_header X-Real-IP              $the_real_ip;
+            proxy_set_header X-Forwarded-For        $the_real_ip;
+            proxy_set_header X-Forwarded-Host       $best_http_host;
+            proxy_set_header X-Forwarded-Port       $pass_port;
+            proxy_set_header X-Forwarded-Proto      $pass_access_scheme;
+            proxy_set_header X-Original-URI         $request_uri;
+            proxy_set_header X-Scheme               $pass_access_scheme;
+            # Pass the original X-Forwarded-For
+            proxy_set_header X-Original-Forwarded-For $http_x_forwarded_for;
+            # mitigate HTTPoxy Vulnerability
+            # https://www.nginx.com/blog/mitigating-the-httpoxy-vulnerability-with-nginx/
+            proxy_set_header Proxy                  "";
+            # Custom headers to proxied server
+            proxy_connect_timeout                   5s;
+            proxy_send_timeout                      60s;
+            proxy_read_timeout                      60s;
+            proxy_redirect                          off;
+            proxy_buffering                         off;
+            proxy_buffer_size                       "4k";
+            proxy_buffers                           4 "4k";
+            proxy_request_buffering                 "on";
+            proxy_http_version                      1.1;
+            proxy_cookie_domain                     off;
+            proxy_cookie_path                       off;
+            # In case of errors try the next upstream server before returning an error
+            proxy_next_upstream                     error timeout invalid_header http_502 http_503 http_504;
+            proxy_pass http://default-writer-8000;            
+            }
+            location = /write {
+            set $proxy_upstream_name "default-writer-8000";
+            set $namespace      "default";
+            set $ingress_name   "test-ingress";
+            set $service_name   "writer";
+            port_in_redirect off;
+            client_max_body_size                    "1m";
+            proxy_set_header Host                   $best_http_host;
+            # Pass the extracted client certificate to the backend
+            proxy_set_header ssl-client-cert        "";
+            proxy_set_header ssl-client-verify      "";
+            proxy_set_header ssl-client-dn          "";
+            # Allow websocket connections
+            proxy_set_header                        Upgrade           $http_upgrade;
+            proxy_set_header                        Connection        $connection_upgrade;
+            proxy_set_header X-Real-IP              $the_real_ip;
+            proxy_set_header X-Forwarded-For        $the_real_ip;
+            proxy_set_header X-Forwarded-Host       $best_http_host;
+            proxy_set_header X-Forwarded-Port       $pass_port;
+            proxy_set_header X-Forwarded-Proto      $pass_access_scheme;
+            proxy_set_header X-Original-URI         $request_uri;
+            proxy_set_header X-Scheme               $pass_access_scheme;
+            # Pass the original X-Forwarded-For
+            proxy_set_header X-Original-Forwarded-For $http_x_forwarded_for;
+            # mitigate HTTPoxy Vulnerability
+            # https://www.nginx.com/blog/mitigating-the-httpoxy-vulnerability-with-nginx/
+            proxy_set_header Proxy                  "";
+            # Custom headers to proxied server
+            proxy_connect_timeout                   5s;
+            proxy_send_timeout                      60s;
+            proxy_read_timeout                      60s;
+            proxy_redirect                          off;
+            proxy_buffering                         off;
+            proxy_buffer_size                       "4k";
+            proxy_buffers                           4 "4k";
+            proxy_request_buffering                 "on";
+            proxy_http_version                      1.1;
+            proxy_cookie_domain                     off;
+            proxy_cookie_path                       off;
+            # In case of errors try the next upstream server before returning an error
+            proxy_next_upstream                     error timeout invalid_header http_502 http_503 http_504;
+            proxy_pass http://default-writer-8000;            
+            }  
+            location ~* /[0-9a-z]+ {
+            set $proxy_upstream_name "default-reader-8080";
+            set $namespace      "default";
+            set $ingress_name   "test-ingress";
+            set $service_name   "reader";
+            port_in_redirect off;
+            client_max_body_size                    "1m";
+            proxy_set_header Host                   $best_http_host;
+            # Pass the extracted client certificate to the backend
+            proxy_set_header ssl-client-cert        "";
+            proxy_set_header ssl-client-verify      "";
+            proxy_set_header ssl-client-dn          "";
+            # Allow websocket connections
+            proxy_set_header                        Upgrade           $http_upgrade;
+            proxy_set_header                        Connection        $connection_upgrade;
+            proxy_set_header X-Real-IP              $the_real_ip;
+            proxy_set_header X-Forwarded-For        $the_real_ip;
+            proxy_set_header X-Forwarded-Host       $best_http_host;
+            proxy_set_header X-Forwarded-Port       $pass_port;
+            proxy_set_header X-Forwarded-Proto      $pass_access_scheme;
+            proxy_set_header X-Original-URI         $request_uri;
+            proxy_set_header X-Scheme               $pass_access_scheme;
+            # Pass the original X-Forwarded-For
+            proxy_set_header X-Original-Forwarded-For $http_x_forwarded_for;
+            # mitigate HTTPoxy Vulnerability
+            # https://www.nginx.com/blog/mitigating-the-httpoxy-vulnerability-with-nginx/
+            proxy_set_header Proxy                  "";
+            # Custom headers to proxied server
+            proxy_connect_timeout                   5s;
+            proxy_send_timeout                      60s;
+            proxy_read_timeout                      60s;
+            proxy_redirect                          off;
+            proxy_buffering                         off;
+            proxy_buffer_size                       "4k";
+            proxy_buffers                           4 "4k";
+            proxy_request_buffering                 "on";
+            proxy_http_version                      1.1;
+            proxy_cookie_domain                     off;
+            proxy_cookie_path                       off;
+            # In case of errors try the next upstream server before returning an error
+            proxy_next_upstream                     error timeout invalid_header http_502 http_503 http_504;
+            proxy_pass http://default-reader-8080;            
+            }
+spec:
+    rules:
+    - http:
+        paths:
+            - path: /readerexport
+              backend:
+                  serviceName: reader
+                  servicePort: 8080
+            - path: /writerexport
+              backend:
+                  serviceName: writer
+                  servicePort: 8000
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: ingress-nginx
+spec:
+  type: NodePort
+  selector:
+    app: ingress-nginx
+  ports:
+  - name: http
+    nodePort: 30080
+    port: 80
+---
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: ingress-nginx
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ingress-nginx
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+      - image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.9.0-beta.18
+        name: ingress-nginx
+        imagePullPolicy: Always
+        ports:
+          - name: http
+            containerPort: 80
+            protocol: TCP
+          - name: https
+            containerPort: 443
+            protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 10254
+            scheme: HTTP
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+        env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+        args:
+        - /nginx-ingress-controller 
+        - --default-backend-service=$(POD_NAMESPACE)/nginx-default-backend
+---
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: nginx-default-backend
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: nginx-default-backend
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+      - name: default-http-backend
+        image: gcr.io/google_containers/defaultbackend:1.0
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+        resources:
+          limits:
+            cpu: 10m
+            memory: 20Mi
+          requests:
+            cpu: 10m
+            memory: 20Mi
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: nginx-default-backend
+spec:
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: nginx-default-backend
