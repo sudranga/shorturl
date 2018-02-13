@@ -36,6 +36,9 @@ func readHandler(ctx ServerCTX) http.Handler {
         
         if u == "" {
             u, err = ctx.dbInst.ReadFromDB(id)
+            if err == nil {
+                ctx.cacheInst.AddKV(id, u)
+            }
         }
 
         if err != nil {
